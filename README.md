@@ -1,2 +1,5 @@
 # devialet-remote
-Simple UPNP remote for Devialet Phantoms
+
+Simple web based UPNP remote for Devialet Phantoms
+
+TODO: add hdmi-cec support

@@ -2,20 +2,17 @@ import upnpclient
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib import parse
 
-class DevialetPhantom:
-    def __init__(self, u):
-        self.name = u.friendly_name
-        self.model = u.model_name
+class DevialetPhantom(upnpclient.Device):
+    def __init__(self, location, device_name=None):
         self.instance_id = 0
         self.channel= 'Master'
-        self.udn = u.udn
-        self.upnp = u
+        upnpclient.Device.__init__(self,location, device_name)
 
     def getVolume(self):
-        return self.upnp.RenderingControl.GetVolume(InstanceID=self.instance_id,Channel=self.channel)['CurrentVolume']
+        return self.RenderingControl.GetVolume(InstanceID=self.instance_id,Channel=self.channel)['CurrentVolume']
 
     def setVolume(self, volume):
-        self.upnp.RenderingControl.SetVolume(InstanceID=self.instance_id,Channel=self.channel,DesiredVolume=volume)
+        self.RenderingControl.SetVolume(InstanceID=self.instance_id,Channel=self.channel,DesiredVolume=volume)
 
     def volUp(self):
         volume = self.getVolume()
@@ -55,7 +52,7 @@ class PhantomRemoteHandler(BaseHTTPRequestHandler):
         html += "<body>"
         html += "<ul>"
         for p in self.list:
-            html+= "<li>%s: %s, Current Volume: %s." % (p.name, p.model, p.getVolume())
+            html+= "<li>%s: %s, Current Volume: %s." % (p.friendly_name, p.model_name, p.getVolume())
             html+= "<br/>"
             html+= "<button type='button' onclick=\"location.href='/?volUp&udn=%s'\">+</button>" % p.udn
             html+= "<button type='button' onclick=\"location.href='/?volDown&udn=%s'\">-</button>" % p.udn
@@ -70,7 +67,7 @@ class PhantomRemoteHandler(BaseHTTPRequestHandler):
         self.wfile.write(html.encode('utf-8'))
 
 devices = upnpclient.discover()
-phantomList = [DevialetPhantom(d) for d in devices if d.manufacturer=='Devialet' and 'Phantom' in d.model_name]
+phantomList = [DevialetPhantom(d.location, device_name=d.friendly_name) for d in devices if d.manufacturer=='Devialet' and 'Phantom' in d.model_name]
 
 print("Found %s Phantom device%s" % (len(phantomList), "s" if len(phantomList)>2 else ""))
 
